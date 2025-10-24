@@ -1,13 +1,43 @@
 <div class="card">
   <div class="button-row">
-    <p-button class="btn" label="Upload"></p-button>
+    <p-button
+      class="btn"
+      label="Upload"
+      (onClick)="openFileUploader()"
+    ></p-button>
     <p-button label="Export" severity="success" class="p-mr-2"></p-button>
-    <p-inputNumber [(ngModel)]="inputValue" [showButtons]="false" [useGrouping]="false" [placeholder]="'Enter a number'" styleClass="p-inputtext-lg"></p-inputNumber>
+
+    <p-fileUpload
+      #fileUploader
+      name="file"
+      url="https://www.primefaces.org/cdn/api/upload.php"
+      (onUpload)="onUpload($event)"
+      [multiple]="true"
+      accept="image/*"
+      maxFileSize="1000000"
+      [auto]="true"
+      [style]="{ display: 'none' }"
+    >
+      <ng-template pTemplate="content">
+        <ul *ngIf="uploadedFiles.length">
+          <li *ngFor="let file of uploadedFiles">
+            {{ file.name }} - {{ file.size }} bytes
+          </li>
+        </ul>
+      </ng-template>
+    </p-fileUpload>
+    <p-inputNumber
+      [(ngModel)]="inputValue"
+      [showButtons]="false"
+      [useGrouping]="false"
+      [placeholder]="'Enter a number'"
+      styleClass="p-inputtext-lg"
+    ></p-inputNumber>
     <p-button label="OK" (onClick)="submitValue()"></p-button>
     <div class="spacer"></div>
     <input type="text" pInputText placeholder="Search..." class="search-bar" />
   </div>
-  <div>
+  <div class="table-container">
     <p-table [value]="vehicles" [tableStyle]="{ 'min-width': '80rem' }">
       <ng-template pTemplate="header">
         <tr>

@@ -1,13 +1,26 @@
-.button-row {
-  display: flex;
-  align-items: center;   
-  gap: 12px;             
-  margin-bottom: 16px;
+.card {
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fff;
 }
 
-.button-row .btn {
-  height: 40px;          
-  min-width: 40px;    
+.table-container {
+  overflow-x: auto;
+}
+
+.button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem; 
+  margin-bottom: 1.5rem;
+}
+
+.btn {
+  background-color: #007ad9;
+  color: #fff;
+  border-radius: 8px;
 }
 
 .spacer {
@@ -20,4 +33,8 @@
   padding: 0 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
+}
+
+.p-button-success {
+  border-radius: 8px;
 }
