@@ -1,0 +1,23 @@
+.button-row {
+  display: flex;
+  align-items: center;   
+  gap: 12px;             
+  margin-bottom: 16px;
+}
+
+.button-row .btn {
+  height: 40px;          
+  min-width: 40px;    
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.search-bar {
+  height: 40px;
+  width: 200px;          
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
