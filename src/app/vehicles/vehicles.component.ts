@@ -7,7 +7,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { VehiclesService } from './vehicles.serivce';
+import { VehiclesService } from '../services/vehicles.serivce';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-vehicles',
@@ -33,7 +34,8 @@ export class VehiclesComponent implements OnInit {
 
   constructor(
     private vehiclesService: VehiclesService,
-    private http: HttpClient
+    private http: HttpClient,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -60,7 +62,7 @@ export class VehiclesComponent implements OnInit {
   }
 
   onSearch(): void {
-    if (this.searchText.trim()) {
+    if (this.searchText && this.searchText.trim()) {
       const searchPattern = this.searchText + '*';
       this.vehiclesService
         .searchVehicles(searchPattern, this.currentPage, 100)
@@ -68,12 +70,14 @@ export class VehiclesComponent implements OnInit {
           next: (response) => {
             this.vehicles = response.data;
             this.totalRecords = response.total;
+            console.log('Search results:', this.vehicles);
           },
           error: (error) => {
             console.error('Error searching vehicles:', error);
           },
         });
     } else {
+      // If search is empty, reload all vehicles.
       this.loadVehicles();
     }
   }

@@ -1,0 +1,16 @@
+<div class="notification-container">
+  <div *ngFor="let notification of notifications" class="notification">
+    <div class="notification-content">
+      <i class="pi pi-check-circle"></i>
+      <div class="notification-text">
+        <strong>{{ notification.message }}</strong>
+        <div *ngIf="notification.fileName" class="notification-detail">
+          File: {{ notification.fileName }}
+        </div>
+      </div>
+    </div>
+    <button class="close-btn" (click)="removeNotification(notification)">
+      ×
+    </button>
+  </div>
+</div>
