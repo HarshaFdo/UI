@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { vehicle } from './Vehilces.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FormsModule } from '@angular/forms';
-import { FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { InputTextModule } from 'primeng/inputtext';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { VehiclesService } from './vehicles.serivce';
 
 @Component({
   selector: 'app-vehicles',
@@ -18,7 +18,6 @@ import { HttpClientModule } from '@angular/common/http';
     ButtonModule,
     InputNumberModule,
     FormsModule,
-    FileUploadModule,
     InputTextModule,
     HttpClientModule,
   ],
@@ -26,29 +25,107 @@ import { HttpClientModule } from '@angular/common/http';
   styleUrls: ['./vehicles.component.scss'],
 })
 export class VehiclesComponent implements OnInit {
-  @ViewChild('fileUploader') fileUploader!: FileUpload;
-
   inputValue: number = 0;
   vehicles: vehicle[] = [];
-  uploadedFiles: any[] = [];
+  totalRecords: number = 0;
+  currentPage: number = 1;
+  searchText: string = '';
 
-  ngOnInit(): void {}
+  constructor(
+    private vehiclesService: VehiclesService,
+    private http: HttpClient
+  ) {}
+
+  ngOnInit(): void {
+    this.loadVehicles();
+  }
+
+  loadVehicles(): void {
+    this.vehiclesService.getAllVehicles(this.currentPage, 100).subscribe({
+      next: (response) => {
+        this.vehicles = response.data;
+        this.totalRecords = response.total;
+        console.log('Vehicles loaded:', this.vehicles);
+      },
+      error: (error) => {
+        console.error('Error loading vehicles:', error);
+      },
+    });
+  }
+
+  loadVehiclesLazy(event: any): void {
+    const page = Math.floor(event.first / event.rows) + 1;
+    this.currentPage = page;
+    this.loadVehicles();
+  }
+
+  onSearch(): void {
+    if (this.searchText.trim()) {
+      const searchPattern = this.searchText + '*';
+      this.vehiclesService
+        .searchVehicles(searchPattern, this.currentPage, 100)
+        .subscribe({
+          next: (response) => {
+            this.vehicles = response.data;
+            this.totalRecords = response.total;
+          },
+          error: (error) => {
+            console.error('Error searching vehicles:', error);
+          },
+        });
+    } else {
+      this.loadVehicles();
+    }
+  }
 
   submitValue(): void {
-    console.log('Submitted value:', this.inputValue);
+    console.log('Export vehicles with age >=', this.inputValue);
+    const userId = 'user123';
+
+    this.http
+      .post('http://localhost:3000/vehicle/export', {
+        minAge: this.inputValue,
+        userId: userId,
+      })
+      .subscribe({
+        next: (response) => {
+          console.log('Export job queued:', response);
+        },
+        error: (error) => {
+          console.error('Error exporting:', error);
+        },
+      });
   }
 
   openFileUploader() {
-    if (this.fileUploader) {
-      this.fileUploader.choose(); // opens the file dialog
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,.xlsx,.xls';
+
+    input.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (file) {
+        this.uploadFile(file);
+      }
+    };
+
+    input.click();
   }
 
-  onUpload(event: any) {
-    for (const file of event.files) {
-      this.uploadedFiles.push(file);
-    }
+  uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
 
-    console.log('Upload successfull!\n Files: ', this.uploadedFiles);
+    console.log('Uploading file:', file.name);
+
+    this.http.post('http://localhost:3000/vehicle/import', formData).subscribe({
+      next: (response) => {
+        console.log('Upload successful:', response);
+        setTimeout(() => this.loadVehicles(), 2000);
+      },
+      error: (error) => {
+        console.error('Error uploading:', error);
+      },
+    });
   }
 }
