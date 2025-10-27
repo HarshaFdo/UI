@@ -83,12 +83,17 @@ export class VehiclesComponent implements OnInit {
   }
 
   submitValue(): void {
-    console.log('Export vehicles with age >=', this.inputValue);
-    const userId = 'user123';
+    const { sessionHash, userId } = this.notificationService.getSessionInfo();
+    console.log('Exporting with:', { minAge: this.inputValue, sessionHash, userId });
+    if (!sessionHash || !userId) {
+      console.error('Missing sessionHash or userId');
+      return;
+    }
 
     this.http
       .post('http://localhost:3000/vehicle/export', {
         minAge: this.inputValue,
+        sessionHash,
         userId: userId,
       })
       .subscribe({

@@ -15,7 +15,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   min-width: 350px;
   max-width: 450px;
@@ -32,6 +32,7 @@
     opacity: 1;
   }
 }
+
 .notification-content {
   display: flex;
   align-items: flex-start;
@@ -39,15 +40,16 @@
   flex: 1;
 }
 
-.notification-content i {
-  font-size: 20px;
+.notification-content i.pi-check-circle {
+  font-size: 24px;
   margin-top: 2px;
 }
 
 .notification-text {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
+  flex: 1;
 }
 
 .notification-text strong {
@@ -59,6 +61,29 @@
   opacity: 0.9;
 }
 
+.download-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+.download-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.download-btn i {
+  font-size: 12px;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -68,6 +93,7 @@
   padding: 0;
   margin-left: 15px;
   align-self: flex-start;
+  line-height: 1;
 }
 
 .close-btn:hover {

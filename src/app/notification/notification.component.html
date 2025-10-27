@@ -7,10 +7,15 @@
         <div *ngIf="notification.fileName" class="notification-detail">
           File: {{ notification.fileName }}
         </div>
+        <button 
+          *ngIf="notification.fileName" 
+          class="download-btn"
+          (click)="downloadFile(notification.fileName)"
+        >
+          <i class="pi pi-download"></i> Download
+        </button>
       </div>
     </div>
-    <button class="close-btn" (click)="removeNotification(notification)">
-      ×
-    </button>
+    <button class="close-btn" (click)="removeNotification(notification)">×</button>
   </div>
 </div>

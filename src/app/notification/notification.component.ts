@@ -4,14 +4,13 @@ import {
   AppNotification,
   NotificationService,
 } from '../services/notification.service';
-import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-notification',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './notification.component.html',
-  styleUrl: './notification.component.scss',
+  styleUrls: ['./notification.component.scss'],
 })
 export class NotificationComponent implements OnInit {
   notifications: AppNotification[] = [];
@@ -26,6 +25,10 @@ export class NotificationComponent implements OnInit {
   }
 
   removeNotification(notification: AppNotification) {
-    this.notifications = this.notifications.filter((n) => n !== notification);
+    this.notificationService.removeNotification(notification)
   }
+
+  downloadFile(fileName: string) {
+  window.open(`http://localhost:3000/vehicle/download/${fileName}`, '_blank');
+}
 }
