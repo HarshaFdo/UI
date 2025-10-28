@@ -37,6 +37,22 @@
         {{ inputValue }} years)
       </p>
     </div>
+    <div class="preview-actions">
+      <p-button
+        label="Confirm Export"
+        severity="success"
+        icon="pi pi-check"
+        (onClick)="confirmExport()"
+      >
+      </p-button>
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        icon="pi pi-times"
+        (onClick)="cancelPreview()"
+      >
+      </p-button>
+    </div>
     <div class="table-container">
       <p-table
         [value]="filteredVehiclesPreview"
@@ -70,22 +86,6 @@
         </ng-template>
       </p-table>
     </div>
-    <div class="preview-actions">
-      <p-button
-        label="Confirm Export"
-        severity="success"
-        icon="pi pi-check"
-        (onClick)="confirmExport()"
-      >
-      </p-button>
-      <p-button
-        label="Cancel"
-        severity="secondary"
-        icon="pi pi-times"
-        (onClick)="cancelPreview()"
-      >
-      </p-button>
-    </div>
   </div>
   <div class="table-container">
     <p-table
@@ -108,6 +108,7 @@
           <th>VIN</th>
           <th>Manufactured Date</th>
           <th>Age of Vehicle</th>
+          <th>Actions</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-vehicle>
@@ -121,6 +122,24 @@
           <td>{{ vehicle.vin }}</td>
           <td>{{ vehicle.manufactured_date | date }}</td>
           <td>{{ vehicle.age_of_vehicle }}</td>
+          <td>
+            <p-button
+              icon="pi pi-pencil"
+              severity="warning"
+              [text]="true"
+              [rounded]="true"
+              (onClick)="editVehicle(vehicle)"
+            >
+            </p-button>
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              (onClick)="deleteVehicle(vehicle)"
+            >
+            </p-button>
+          </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
@@ -130,4 +149,73 @@
       </ng-template>
     </p-table>
   </div>
+  <!-- Edit Dialog -->
+  <p-dialog
+    header="Edit Vehicle"
+    [(visible)]="displayEditDialog"
+    [modal]="true"
+    [style]="{ width: '50vw' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="edit-form" *ngIf="selectedVehicle">
+      <div class="p-fluid">
+        <div class="p-field">
+          <label>First Name</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="selectedVehicle.first_name"
+          />
+        </div>
+
+        <div class="p-field">
+          <label>Last Name</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="selectedVehicle.last_name"
+          />
+        </div>
+
+        <div class="p-field">
+          <label>Email</label>
+          <input type="email" pInputText [(ngModel)]="selectedVehicle.email" />
+        </div>
+
+        <div class="p-field">
+          <label>Car Make</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="selectedVehicle.car_make"
+          />
+        </div>
+
+        <div class="p-field">
+          <label>Car Model</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="selectedVehicle.car_model"
+          />
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        (onClick)="displayEditDialog = false"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        label="Save"
+        icon="pi pi-check"
+        (onClick)="saveVehicle()"
+        severity="success"
+      ></p-button>
+    </ng-template>
+  </p-dialog>
 </div>

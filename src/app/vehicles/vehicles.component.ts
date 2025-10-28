@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { VehiclesService } from '../services/vehicles.serivce';
 import { NotificationService } from '../services/notification.service';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-vehicles',
@@ -21,6 +22,7 @@ import { NotificationService } from '../services/notification.service';
     FormsModule,
     InputTextModule,
     HttpClientModule,
+    DialogModule,
   ],
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.scss'],
@@ -167,5 +169,50 @@ export class VehiclesComponent implements OnInit {
         console.error('Error uploading:', error);
       },
     });
+  }
+
+  displayEditDialog: boolean = false;
+  selectedVehicle: vehicle | null = null;
+
+  editVehicle(vehicle: vehicle): void {
+    this.selectedVehicle = { ...vehicle };
+    this.displayEditDialog = true;
+  }
+
+  saveVehicle(): void {
+    if (!this.selectedVehicle) return;
+
+    this.vehiclesService
+      .updateVehicle(this.selectedVehicle.vin, {
+        first_name: this.selectedVehicle.first_name,
+        last_name: this.selectedVehicle.last_name,
+        email: this.selectedVehicle.email,
+        car_make: this.selectedVehicle.car_make,
+        car_model: this.selectedVehicle.car_model,
+      })
+      .subscribe({
+        next: () => {
+          console.log('Vehicle updated successfully');
+          this.displayEditDialog = false;
+          this.loadVehicles(); // Refresh table
+        },
+        error: (error) => {
+          console.error('Error updating vehicle:', error);
+        },
+      });
+  }
+
+  deleteVehicle(vehicle: vehicle): void {
+    if (confirm(`Are you sure you want to delete vehicle ${vehicle.vin}?`)) {
+      this.vehiclesService.deleteVehicle(vehicle.vin).subscribe({
+        next: () => {
+          console.log('Vehicle deleted successfully');
+          this.loadVehicles(); // Refresh table
+        },
+        error: (error) => {
+          console.error('Error deleting vehicle:', error);
+        },
+      });
+    }
   }
 }

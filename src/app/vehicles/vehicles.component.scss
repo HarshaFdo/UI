@@ -67,3 +67,18 @@
   display: flex;
   gap: 10px;
 }
+
+.edit-form {
+  padding: 20px 0;
+  
+  .p-field {
+    margin-bottom: 20px;
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+}
