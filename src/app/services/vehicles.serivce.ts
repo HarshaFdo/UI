@@ -45,6 +45,22 @@ const SEARCH_VEHICLES = gql`
   }
 `;
 
+const SEARCH_BY_AGE = gql`
+  query SearchByAge($minAge: Int!) {
+    searchByAge(minAge: $minAge) {
+      id
+      first_name
+      last_name
+      email
+      car_make
+      car_model
+      vin
+      manufactured_date
+      age_of_vehicle
+    }
+  }
+`;
+
 const UPDATE_VEHICLE = gql`
   mutation UpdateVehicle($vin: String!, $updateData: UpdateVehicleInput!) {
     updateVehicle(vin: $vin, updateData: $updateData) {
@@ -68,7 +84,7 @@ const DELETE_VEHICLE = gql`
 `;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class VehiclesService {
   constructor(private apollo: Apollo) {}
@@ -78,28 +94,40 @@ export class VehiclesService {
       .watchQuery<any>({
         query: GET_ALL_VEHICLES,
         variables: { page, limit },
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
       })
-      .valueChanges
-      .pipe(map((result) => result.data.getAllVehicles));
+      .valueChanges.pipe(map((result) => result.data.getAllVehicles));
   }
 
-  searchVehicles(model: string, page: number = 1, limit: number = 100): Observable<any> {
+  searchVehicles(
+    model: string,
+    page: number = 1,
+    limit: number = 100
+  ): Observable<any> {
     return this.apollo
       .watchQuery<any>({
         query: SEARCH_VEHICLES,
         variables: { model, page, limit },
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
       })
-      .valueChanges
-      .pipe(map((result) => result.data.searchVehicles));
+      .valueChanges.pipe(map((result) => result.data.searchVehicles));
+  }
+
+  searchByAge(minAge: number): Observable<any> {
+    return this.apollo
+      .watchQuery<any>({
+        query: SEARCH_BY_AGE,
+        variables: { minAge },
+        fetchPolicy: 'network-only',
+      })
+      .valueChanges.pipe(map((result) => result.data.searchByAge));
   }
 
   updateVehicle(vin: string, updateData: any): Observable<any> {
     return this.apollo
       .mutate({
         mutation: UPDATE_VEHICLE,
-        variables: { vin, updateData }
+        variables: { vin, updateData },
       } as any)
       .pipe(map((result: any) => result.data?.updateVehicle));
   }
@@ -108,7 +136,7 @@ export class VehiclesService {
     return this.apollo
       .mutate({
         mutation: DELETE_VEHICLE,
-        variables: { vin }
+        variables: { vin },
       } as any)
       .pipe(map((result: any) => result.data?.deleteVehicle));
   }

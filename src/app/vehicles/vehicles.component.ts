@@ -28,6 +28,7 @@ import { NotificationService } from '../services/notification.service';
 export class VehiclesComponent implements OnInit {
   inputValue: number = 0;
   vehicles: vehicle[] = [];
+  filteredVehiclesPreview: vehicle[] = [];
   totalRecords: number = 0;
   currentPage: number = 1;
   searchText: string = '';
@@ -83,8 +84,32 @@ export class VehiclesComponent implements OnInit {
   }
 
   submitValue(): void {
+    if (this.inputValue <= 0) {
+      alert('Pleaseenter a valid age filter');
+      return;
+    }
+
+    // Fetch thre preview data
+    this.vehiclesService.searchByAge(this.inputValue).subscribe({
+      next: (vehicles) => {
+        this.filteredVehiclesPreview = vehicles;
+        if (vehicles.lenght === 0) {
+          alert('No vehicles found matching this age filter');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching preview:', error);
+      },
+    });
+  }
+
+  confirmExport(): void {
     const { sessionHash, userId } = this.notificationService.getSessionInfo();
-    console.log('Exporting with:', { minAge: this.inputValue, sessionHash, userId });
+    console.log('Exporting with:', {
+      minAge: this.inputValue,
+      sessionHash,
+      userId,
+    });
     if (!sessionHash || !userId) {
       console.error('Missing sessionHash or userId');
       return;
@@ -99,11 +124,17 @@ export class VehiclesComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('Export job queued:', response);
+          this.cancelPreview(); // after the export close the priview
         },
         error: (error) => {
           console.error('Error exporting:', error);
         },
       });
+  }
+
+  cancelPreview(): void {
+    this.filteredVehiclesPreview = [];
+    this.inputValue = 0;
   }
 
   openFileUploader() {
