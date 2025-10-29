@@ -29,6 +29,6 @@ export class NotificationComponent implements OnInit {
   }
 
   downloadFile(fileName: string) {
-  window.open(`http://localhost:3000/vehicle/download/${fileName}`, '_blank');
+  window.open(`http://localhost:3003/vehicle/download/${fileName}`, '_blank');
 }
 }

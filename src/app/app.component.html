@@ -1,4 +1,23 @@
 <app-notification></app-notification>
-<div>
-  <app-vehicles></app-vehicles>
+<div class="app-container">
+  <nav class="tab-navigation">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="tab-button"
+    >
+      Vehicle Management
+    </a>
+    <a
+      routerLink="/service-records"
+      routerLinkActive="active"
+      class="tab-button"
+    >
+      Service Records Management
+    </a>
+  </nav>
+  <div class="content-area">
+    <router-outlet></router-outlet>
+  </div>
 </div>

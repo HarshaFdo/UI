@@ -118,7 +118,7 @@ export class VehiclesComponent implements OnInit {
     }
 
     this.http
-      .post('http://localhost:3000/vehicle/export', {
+      .post('http://localhost:3003/vehicle/export', {
         minAge: this.inputValue,
         sessionHash,
         userId: userId,
@@ -160,7 +160,7 @@ export class VehiclesComponent implements OnInit {
 
     console.log('Uploading file:', file.name);
 
-    this.http.post('http://localhost:3000/vehicle/import', formData).subscribe({
+    this.http.post('http://localhost:3003/vehicle/import', formData).subscribe({
       next: (response) => {
         console.log('Upload successful:', response);
         setTimeout(() => this.loadVehicles(), 2000);
