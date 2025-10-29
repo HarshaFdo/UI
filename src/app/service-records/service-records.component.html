@@ -1,1 +1,141 @@
-<p>service-records works!</p>
+<div class="service-records-container">
+  
+  <!-- Feature 1: Search by VIN -->
+  <p-card header="Search by VIN" styleClass="mb-4">
+    <div class="search-box">
+      <span class="p-input flex-1">
+        
+        <input 
+          pInputText 
+          type="text" 
+          [formControl]="vinSearchControl"
+          placeholder="Enter VIN (e.g., Z9R77V461L1830K)"
+          (keyup.enter)="searchByVin()"
+          class="w-full"
+        />
+      </span>
+      <p-button 
+        label="Search" 
+        (onClick)="searchByVin()" 
+        [loading]="searchLoading"
+        styleClass="ml-2"
+      ></p-button>
+    </div>
+
+    <p-message 
+      *ngIf="searchError" 
+      severity="error" 
+      [text]="searchError"
+      styleClass="mt-3"
+    ></p-message>
+
+    <div *ngIf="searchedVehicle" class="mt-4">
+      <p-card header="Vehicle Information" styleClass="mb-3">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <p><strong>VIN:</strong> {{ searchedVehicle.vin }}</p>
+            <p><strong>Owner:</strong> {{ searchedVehicle.first_name }} {{ searchedVehicle.last_name }}</p>
+          </div>
+          <div class="col-12 md:col-6">
+            <p><strong>Vehicle:</strong> {{ searchedVehicle.car_make }} {{ searchedVehicle.car_model }}</p>
+            <p><strong>Age:</strong> {{ searchedVehicle.age_of_vehicle }} years</p>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card header="Service Records">
+        <p-message 
+          *ngIf="searchedVehicle.serviceRecords?.length === 0" 
+          severity="info" 
+          text="No service records found for this vehicle."
+        ></p-message>
+
+        <div *ngIf="searchedVehicle.serviceRecords?.length > 0">
+          <p-table [value]="searchedVehicle.serviceRecords" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Service Type</th>
+                <th>Description</th>
+                <th>Cost</th>
+                <th>Date</th>
+                <th>Mechanic</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-record>
+              <tr>
+                <td>{{ record.service_type }}</td>
+                <td>{{ record.description }}</td>
+                <td>{{ formatCurrency(record.cost) }}</td>
+                <td>{{ formatDate(record.service_date) }}</td>
+                <td>{{ record.mechanic_name }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-card>
+    </div>
+  </p-card>
+
+  <p-divider></p-divider>
+
+  <!-- Feature 2: Dropdown Selection -->
+  <p-card header="View All Records by Vehicle" styleClass="mt-4">
+    <div class="dropdown-container">
+      <p-dropdown 
+        [options]="vehicles"
+        [(ngModel)]="selectedVehicle"
+        (onChange)="onVehicleSelect($event)"
+        placeholder="-- Select a Vehicle --"
+        [filter]="true"
+        filterBy="label"
+        styleClass="w-full"
+        [showClear]="true"
+      ></p-dropdown>
+    </div>
+
+    <div *ngIf="dropdownLoading" class="text-center mt-4">
+      <p-progressSpinner styleClass="w-4rem h-4rem"></p-progressSpinner>
+      <p>Loading service records...</p>
+    </div>
+
+    <p-message 
+      *ngIf="dropdownError" 
+      severity="error" 
+      [text]="dropdownError"
+      styleClass="mt-3"
+    ></p-message>
+
+    <div *ngIf="selectedVehicle && selectedVehicleRecords.length > 0" class="mt-4">
+      <p-card header="Service History">
+        <p-table [value]="selectedVehicleRecords" styleClass="p-datatable-striped">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Date</th>
+              <th>Service Type</th>
+              <th>Description</th>
+              <th>Cost</th>
+              <th>Mechanic</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-record>
+            <tr>
+              <td>{{ formatDate(record.service_date) }}</td>
+              <td>{{ record.service_type }}</td>
+              <td>{{ record.description }}</td>
+              <td>{{ formatCurrency(record.cost) }}</td>
+              <td>{{ record.mechanic_name }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </div>
+
+    <p-message 
+      *ngIf="selectedVehicle && selectedVehicleRecords.length === 0 && !dropdownLoading" 
+      severity="info" 
+      text="No service records found for this vehicle."
+      styleClass="mt-3"
+    ></p-message>
+  </p-card>
+
+</div>
