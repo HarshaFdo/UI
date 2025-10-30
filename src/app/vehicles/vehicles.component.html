@@ -1,101 +1,89 @@
-<div class="card">
-  <div class="button-row">
-    <p-button
-      class="btn"
-      label="Upload"
-      (onClick)="openFileUploader()"
-    ></p-button>
-    <p-inputNumber
-      [(ngModel)]="inputValue"
-      [showButtons]="false"
-      [useGrouping]="false"
-      [placeholder]="'Enter a number'"
-      styleClass="p-inputtext-lg"
-    ></p-inputNumber>
-    <p-button
-      label="Export"
-      (onClick)="submitValue()"
-      severity="success"
-      class="p-mr-2"
-    ></p-button>
-    <div class="spacer"></div>
-    <input
-      type="text"
-      pInputText
-      placeholder="Search by model..."
-      class="search-bar"
-      [(ngModel)]="searchText"
-      (ngModelChange)="onSearch()"
-      (keyup.enter)="onSearch()"
-    />
-  </div>
-  <div class="preview-section" *ngIf="filteredVehiclesPreview.length > 0">
-    <div class="preview-header">
-      <h3>Export Preview</h3>
-      <p>
-        {{ filteredVehiclesPreview.length }} vehicles will be exported (age >=
-        {{ inputValue }} years)
-      </p>
+<div class="vehicles-container">
+
+  <p-card styleClass="mb-4">
+    <div class="actions-row">
+      <div class="action-group">
+        <label class="action-label">Import Data</label>
+        <p-button
+          label="Upload CSV/Excel"
+          icon="pi pi-upload"
+          (onClick)="openFileUploader()"
+          styleClass="p-button-primary"
+        ></p-button>
+      </div>
+
+      <div class="action-group">
+        <label class="action-label">Export by Age</label>
+        <div class="flex-group">
+          <p-inputNumber
+            [(ngModel)]="inputValue"
+            [showButtons]="true"
+            [min]="0"
+            [max]="50"
+            placeholder="Min age (years)"
+            styleClass="age-input"
+          ></p-inputNumber>
+          <p-button
+            label="Preview Export"
+            icon="pi pi-eye"
+            (onClick)="submitValue()"
+            severity="success"
+          ></p-button>
+        </div>
+      </div>
+
+      <div class="action-group flex-grow">
+        <label class="action-label">Search by Model</label>
+        <span class="p-input-left w-full">
+          <input
+            type="text"
+            pInputText
+            placeholder="Search with wildcard (e.g., M*)"
+            class="w-full"
+            [(ngModel)]="searchText"
+            (ngModelChange)="onSearch()"
+            (keyup.enter)="onSearch()"
+          />
+        </span>
+      </div>
     </div>
-    <div class="preview-actions">
-      <p-button
-        label="Confirm Export"
-        severity="success"
-        icon="pi pi-check"
-        (onClick)="confirmExport()"
-      >
-      </p-button>
-      <p-button
-        label="Cancel"
-        severity="secondary"
-        icon="pi pi-times"
-        (onClick)="cancelPreview()"
-      >
-      </p-button>
-    </div>
-    <div class="table-container">
-      <p-table
-        [value]="filteredVehiclesPreview"
-        [tableStyle]="{ 'min-width': '80rem' }"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Car Make</th>
-            <th>Car Model</th>
-            <th>VIN</th>
-            <th>Manufactured Date</th>
-            <th>Age of Vehicle</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-vehicle>
-          <tr>
-            <td>{{ vehicle.id }}</td>
-            <td>{{ vehicle.first_name }}</td>
-            <td>{{ vehicle.last_name }}</td>
-            <td>{{ vehicle.email }}</td>
-            <td>{{ vehicle.car_make }}</td>
-            <td>{{ vehicle.car_model }}</td>
-            <td>{{ vehicle.vin }}</td>
-            <td>{{ vehicle.manufactured_date | date }}</td>
-            <td>{{ vehicle.age_of_vehicle }}</td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  </div>
-  <div class="table-container">
+  </p-card>
+
+  <p-card
+    *ngIf="filteredVehiclesPreview.length > 0"
+    styleClass="mb-4 preview-card"
+  >
+    <ng-template pTemplate="header">
+      <div class="preview-card-header">
+        <div>
+          <h3><i class="pi pi-file-export"></i> Export Preview</h3>
+          <p class="preview-subtitle">
+            {{ filteredVehiclesPreview.length }} vehicles will be exported (age
+            ≥ {{ inputValue }} years)
+          </p>
+        </div>
+        <div class="preview-actions">
+          <p-button
+            label="Confirm Export"
+            icon="pi pi-check"
+            (onClick)="confirmExport()"
+            styleClass="p-button-success"
+          ></p-button>
+          <p-button
+            label="Cancel"
+            icon="pi pi-times"
+            (onClick)="cancelPreview()"
+            styleClass="p-button-secondary"
+          ></p-button>
+        </div>
+      </div>
+    </ng-template>
+
     <p-table
-      [value]="vehicles"
-      [rows]="100"
-      [totalRecords]="totalRecords"
-      [lazy]="true"
-      (onLazyLoad)="loadVehiclesLazy($event)"
-      [paginator]="true"
-      [tableStyle]="{ 'min-width': '80rem' }"
+      [value]="filteredVehiclesPreview"
+      [scrollable]="true"
+      scrollHeight="400px"
+      styleClass="p-datatable-striped"
     >
       <ng-template pTemplate="header">
         <tr>
@@ -107,8 +95,7 @@
           <th>Car Model</th>
           <th>VIN</th>
           <th>Manufactured Date</th>
-          <th>Age of Vehicle</th>
-          <th>Actions</th>
+          <th>Age (years)</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-vehicle>
@@ -120,84 +107,186 @@
           <td>{{ vehicle.car_make }}</td>
           <td>{{ vehicle.car_model }}</td>
           <td>{{ vehicle.vin }}</td>
-          <td>{{ vehicle.manufactured_date | date }}</td>
-          <td>{{ vehicle.age_of_vehicle }}</td>
+          <td>{{ vehicle.manufactured_date | date : "MMM dd, yyyy" }}</td>
           <td>
-            <p-button
-              icon="pi pi-pencil"
-              severity="warning"
-              [text]="true"
-              [rounded]="true"
-              (onClick)="editVehicle(vehicle)"
-            >
-            </p-button>
-            <p-button
-              icon="pi pi-trash"
-              severity="danger"
-              [text]="true"
-              [rounded]="true"
-              (onClick)="deleteVehicle(vehicle)"
-            >
-            </p-button>
+            <p-tag
+              [value]="vehicle.age_of_vehicle + ' years'"
+              severity="info"
+            ></p-tag>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="table-card-header">
+        <h3>All Vehicles</h3>
+        <p-tag [value]="'Total: ' + totalRecords" severity="success"></p-tag>
+      </div>
+    </ng-template>
+
+    <p-table
+      [value]="vehicles"
+      [rows]="100"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (onLazyLoad)="loadVehiclesLazy($event)"
+      [paginator]="true"
+      [loading]="loading"
+      styleClass="p-datatable-striped"
+      [scrollable]="true"
+      scrollHeight="600px"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Car Make</th>
+          <th>Car Model</th>
+          <th>VIN</th>
+          <th pSortableColumn="manufactured_date">
+            Manufactured Date
+            <p-sortIcon field="manufactured_date"></p-sortIcon>
+          </th>
+          <th>Age</th>
+          <th style="width: 120px">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-vehicle>
+        <tr>
+          <td>{{ vehicle.id }}</td>
+          <td>{{ vehicle.first_name }}</td>
+          <td>{{ vehicle.last_name }}</td>
+          <td>{{ vehicle.email }}</td>
+          <td>{{ vehicle.car_make }}</td>
+          <td>{{ vehicle.car_model }}</td>
+          <td>
+            <code>{{ vehicle.vin }}</code>
+          </td>
+          <td>{{ vehicle.manufactured_date | date : "MMM dd, yyyy" }}</td>
+          <td>
+            <p-tag
+              [value]="vehicle.age_of_vehicle + ' years'"
+              [severity]="vehicle.age_of_vehicle > 10 ? 'warning' : 'info'"
+            ></p-tag>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="warning"
+                (onClick)="editVehicle(vehicle)"
+                pTooltip="Edit"
+                tooltipPosition="top"
+              ></p-button>
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="deleteVehicle(vehicle)"
+                pTooltip="Delete"
+                tooltipPosition="top"
+              ></p-button>
+            </div>
           </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" style="text-align: center">No vehicles found</td>
+          <td colspan="10" style="text-align: center; padding: 3rem">
+            <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc"></i>
+            <p style="margin-top: 1rem; color: #666">No vehicles found</p>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="10" style="text-align: center; padding: 3rem">
+            <p-progressSpinner
+              styleClass="w-4rem h-4rem"
+              strokeWidth="4"
+            ></p-progressSpinner>
+            <p style="margin-top: 1rem">Loading vehicles...</p>
+          </td>
         </tr>
       </ng-template>
     </p-table>
-  </div>
-  <!-- Edit Dialog -->
+  </p-card>
+
   <p-dialog
     header="Edit Vehicle"
     [(visible)]="displayEditDialog"
     [modal]="true"
-    [style]="{ width: '50vw' }"
+    [style]="{ width: '600px' }"
     [draggable]="false"
     [resizable]="false"
   >
     <div class="edit-form" *ngIf="selectedVehicle">
       <div class="p-fluid">
-        <div class="p-field">
-          <label>First Name</label>
+        <div class="field">
+          <label for="firstName">First Name</label>
           <input
+            id="firstName"
             type="text"
             pInputText
             [(ngModel)]="selectedVehicle.first_name"
           />
         </div>
 
-        <div class="p-field">
-          <label>Last Name</label>
+        <div class="field">
+          <label for="lastName">Last Name </label>
           <input
+            id="lastName"
             type="text"
             pInputText
             [(ngModel)]="selectedVehicle.last_name"
           />
         </div>
 
-        <div class="p-field">
-          <label>Email</label>
-          <input type="email" pInputText [(ngModel)]="selectedVehicle.email" />
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            [(ngModel)]="selectedVehicle.email"
+          />
         </div>
 
-        <div class="p-field">
-          <label>Car Make</label>
+        <div class="field">
+          <label for="carMake">Car Make</label>
           <input
+            id="carMake"
             type="text"
             pInputText
             [(ngModel)]="selectedVehicle.car_make"
           />
         </div>
 
-        <div class="p-field">
-          <label>Car Model</label>
+        <div class="field">
+          <label for="carModel">Car Model</label>
           <input
+            id="carModel"
             type="text"
             pInputText
             [(ngModel)]="selectedVehicle.car_model"
+          />
+        </div>
+
+        <div class="field">
+          <label>VIN</label>
+          <input
+            type="text"
+            pInputText
+            [value]="selectedVehicle.vin"
+            [disabled]="true"
           />
         </div>
       </div>
@@ -208,13 +297,13 @@
         label="Cancel"
         icon="pi pi-times"
         (onClick)="displayEditDialog = false"
-        severity="secondary"
+        styleClass="p-button-text"
       ></p-button>
       <p-button
-        label="Save"
+        label="Save Changes"
         icon="pi pi-check"
         (onClick)="saveVehicle()"
-        severity="success"
+        [loading]="saving"
       ></p-button>
     </ng-template>
   </p-dialog>

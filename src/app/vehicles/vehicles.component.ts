@@ -10,6 +10,10 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { VehiclesService } from '../services/vehicles.serivce';
 import { NotificationService } from '../services/notification.service';
 import { DialogModule } from 'primeng/dialog';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { CardModule } from 'primeng/card';
 
 @Component({
   selector: 'app-vehicles',
@@ -23,6 +27,10 @@ import { DialogModule } from 'primeng/dialog';
     InputTextModule,
     HttpClientModule,
     DialogModule,
+    TagModule,
+    TooltipModule,
+    ProgressSpinnerModule,
+    CardModule,
   ],
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.scss'],
@@ -34,6 +42,9 @@ export class VehiclesComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 1;
   searchText: string = '';
+
+  loading = false;
+  saving = false;
 
   constructor(
     private vehiclesService: VehiclesService,
