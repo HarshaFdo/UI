@@ -1,30 +1,31 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
 <div class="service-records-container">
-  
   <!-- Feature 1: Search by VIN -->
   <p-card header="Search by VIN" styleClass="mb-4">
     <div class="search-box">
       <span class="p-input flex-1">
-        
-        <input 
-          pInputText 
-          type="text" 
+        <input
+          pInputText
+          type="text"
           [formControl]="vinSearchControl"
           placeholder="Enter VIN (e.g., Z9R77V461L1830K)"
           (keyup.enter)="searchByVin()"
           class="w-full"
         />
       </span>
-      <p-button 
-        label="Search" 
-        (onClick)="searchByVin()" 
+      <p-button
+        label="Search"
+        (onClick)="searchByVin()"
         [loading]="searchLoading"
         styleClass="ml-2"
       ></p-button>
     </div>
 
-    <p-message 
-      *ngIf="searchError" 
-      severity="error" 
+    <p-message
+      *ngIf="searchError"
+      severity="error"
       [text]="searchError"
       styleClass="mt-3"
     ></p-message>
@@ -34,24 +35,35 @@
         <div class="grid">
           <div class="col-12 md:col-6">
             <p><strong>VIN:</strong> {{ searchedVehicle.vin }}</p>
-            <p><strong>Owner:</strong> {{ searchedVehicle.first_name }} {{ searchedVehicle.last_name }}</p>
+            <p>
+              <strong>Owner:</strong> {{ searchedVehicle.first_name }}
+              {{ searchedVehicle.last_name }}
+            </p>
           </div>
           <div class="col-12 md:col-6">
-            <p><strong>Vehicle:</strong> {{ searchedVehicle.car_make }} {{ searchedVehicle.car_model }}</p>
-            <p><strong>Age:</strong> {{ searchedVehicle.age_of_vehicle }} years</p>
+            <p>
+              <strong>Vehicle:</strong> {{ searchedVehicle.car_make }}
+              {{ searchedVehicle.car_model }}
+            </p>
+            <p>
+              <strong>Age:</strong> {{ searchedVehicle.age_of_vehicle }} years
+            </p>
           </div>
         </div>
       </p-card>
 
       <p-card header="Service Records">
-        <p-message 
-          *ngIf="searchedVehicle.serviceRecords?.length === 0" 
-          severity="info" 
+        <p-message
+          *ngIf="searchedVehicle.serviceRecords?.length === 0"
+          severity="info"
           text="No service records found for this vehicle."
         ></p-message>
 
         <div *ngIf="searchedVehicle.serviceRecords?.length > 0">
-          <p-table [value]="searchedVehicle.serviceRecords" styleClass="p-datatable-sm">
+          <p-table
+            [value]="searchedVehicle.serviceRecords"
+            styleClass="p-datatable-sm"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th>Service Type</th>
@@ -81,7 +93,7 @@
   <!-- Feature 2: Dropdown Selection -->
   <p-card header="View All Records by Vehicle" styleClass="mt-4">
     <div class="dropdown-container">
-      <p-dropdown 
+      <p-dropdown
         [options]="vehicles"
         [(ngModel)]="selectedVehicle"
         (onChange)="onVehicleSelect($event)"
@@ -98,16 +110,32 @@
       <p>Loading service records...</p>
     </div>
 
-    <p-message 
-      *ngIf="dropdownError" 
-      severity="error" 
+    <p-message
+      *ngIf="dropdownError"
+      severity="error"
       [text]="dropdownError"
       styleClass="mt-3"
     ></p-message>
 
-    <div *ngIf="selectedVehicle && selectedVehicleRecords.length > 0" class="mt-4">
-      <p-card header="Service History">
-        <p-table [value]="selectedVehicleRecords" styleClass="p-datatable-striped">
+    <div
+      *ngIf="selectedVehicle && selectedVehicleRecords.length > 0"
+      class="mt-4"
+    >
+      <div class="flex justify-content-between align-items-center">
+        <h4>Service History</h4>
+        <p-button
+          label="Add Service Record"
+          icon="pi pi-plus"
+          (onClick)="openCreateDialog()"
+          styleClass="p-button-success"
+        ></p-button>
+      </div>
+
+      <p-card>
+        <p-table
+          [value]="selectedVehicleRecords"
+          styleClass="p-datatable-striped"
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Date</th>
@@ -124,18 +152,178 @@
               <td>{{ record.description }}</td>
               <td>{{ formatCurrency(record.cost) }}</td>
               <td>{{ record.mechanic_name }}</td>
+              <td>
+                <p-button
+                  icon="pi pi-pencil"
+                  styleClass="p-button-rounded p-button-text p-button-warning mr-2"
+                  (onClick)="openEditDialog(record)"
+                  pTooltip="Edit"
+                ></p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  styleClass="p-button-rounded p-button-text p-button-danger"
+                  (onClick)="deleteRecord(record)"
+                  pTooltip="Delete"
+                ></p-button>
+              </td>
             </tr>
           </ng-template>
         </p-table>
       </p-card>
     </div>
 
-    <p-message 
-      *ngIf="selectedVehicle && selectedVehicleRecords.length === 0 && !dropdownLoading" 
-      severity="info" 
-      text="No service records found for this vehicle."
-      styleClass="mt-3"
-    ></p-message>
+    <div
+      *ngIf="
+        selectedVehicle &&
+        selectedVehicleRecords.length === 0 &&
+        !dropdownLoading
+      "
+      class="mt-4"
+    >
+      <p-message
+        severity="info"
+        text="No service records found for this vehicle."
+      ></p-message>
+      <div class="text-center mt-3">
+        <p-button
+          label="Add First Service Record"
+          icon="pi pi-plus"
+          (onClick)="openCreateDialog()"
+          styleClass="p-button-success"
+        ></p-button>
+      </div>
+    </div>
   </p-card>
-
 </div>
+
+<!-- Create/Edit Dialog -->
+<p-dialog
+  [(visible)]="displayDialog"
+  [header]="isEditMode ? 'Edit Service Record' : 'Add Service Record'"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="recordForm">
+    <div class="p-fluid">
+      <!-- Service Type -->
+      <div class="field">
+        <label for="service_type">Service Type *</label>
+        <input
+          pInputText
+          id="service_type"
+          formControlName="service_type"
+          placeholder="e.g., Oil Change, Brake Service"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            recordForm.get('service_type')?.invalid &&
+            recordForm.get('service_type')?.touched
+          "
+        >
+          Service type is required
+        </small>
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+        <label for="description">Description *</label>
+        <textarea
+          pInputTextarea
+          id="description"
+          formControlName="description"
+          rows="3"
+          placeholder="Enter service details"
+        ></textarea>
+        <small
+          class="p-error"
+          *ngIf="
+            recordForm.get('description')?.invalid &&
+            recordForm.get('description')?.touched
+          "
+        >
+          Description is required
+        </small>
+      </div>
+
+      <!-- Cost -->
+      <div class="field">
+        <label for="cost">Cost ($) *</label>
+        <p-inputNumber
+          inputId="cost"
+          formControlName="cost"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          placeholder="0.00"
+        ></p-inputNumber>
+        <small
+          class="p-error"
+          *ngIf="
+            recordForm.get('cost')?.invalid && recordForm.get('cost')?.touched
+          "
+        >
+          Cost is required and must be positive
+        </small>
+      </div>
+
+      <!-- Service Date -->
+      <div class="field">
+        <label for="service_date">Service Date *</label>
+        <p-calendar
+          inputId="service_date"
+          formControlName="service_date"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          placeholder="Select date"
+        ></p-calendar>
+        <small
+          class="p-error"
+          *ngIf="
+            recordForm.get('service_date')?.invalid &&
+            recordForm.get('service_date')?.touched
+          "
+        >
+          Service date is required
+        </small>
+      </div>
+
+      <!-- Mechanic Name -->
+      <div class="field">
+        <label for="mechanic_name">Mechanic Name *</label>
+        <input
+          pInputText
+          id="mechanic_name"
+          formControlName="mechanic_name"
+          placeholder="Enter mechanic's name"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            recordForm.get('mechanic_name')?.invalid &&
+            recordForm.get('mechanic_name')?.touched
+          "
+        >
+          Mechanic name is required
+        </small>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      icon="pi pi-times"
+      (onClick)="displayDialog = false"
+      styleClass="p-button-text"
+    ></p-button>
+    <p-button
+      [label]="isEditMode ? 'Update' : 'Create'"
+      icon="pi pi-check"
+      (onClick)="saveRecord()"
+      [loading]="saving"
+    ></p-button>
+  </ng-template>
+</p-dialog>
