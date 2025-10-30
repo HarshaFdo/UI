@@ -3,7 +3,6 @@ import { Apollo, gql } from 'apollo-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-// GraphQL Queries & Mutations
 const GET_VEHICLE_WITH_RECORDS = gql`
   query GetVehicleWithRecords($vin: String!) {
     getVehicle(vin: $vin) {
