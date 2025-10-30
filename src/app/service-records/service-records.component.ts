@@ -7,7 +7,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Apollo, gql } from 'apollo-angular';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { CardModule } from 'primeng/card';
@@ -23,90 +22,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
-
-const GET_VEHICLE_WITH_RECORDS = gql`
-  query GetVehicleWithRecords($vin: String!) {
-    getVehicle(vin: $vin) {
-      id
-      vin
-      first_name
-      last_name
-      car_make
-      car_model
-      age_of_vehicle
-      serviceRecords {
-        id
-        service_type
-        description
-        cost
-        service_date
-        mechanic_name
-      }
-    }
-  }
-`;
-
-const GET_ALL_VEHICLES = gql`
-  query GetAllVehicles($page: Int!, $limit: Int!) {
-    getAllVehicles(page: $page, limit: $limit) {
-      data {
-        id
-        vin
-        first_name
-        last_name
-        car_make
-        car_model
-      }
-    }
-  }
-`;
-
-const GET_RECORDS_BY_VIN = gql`
-  query GetRecordsByVin($vin: String!) {
-    serviceRecordsByVin(vin: $vin) {
-      id
-      service_type
-      description
-      cost
-      service_date
-      mechanic_name
-    }
-  }
-`;
-
-const CREATE_RECORD = gql`
-  mutation CreateRecord($input: CreateRecordInput!) {
-    createRecord(createRecordInput: $input) {
-      id
-      vin
-      service_type
-      description
-      cost
-      service_date
-      mechanic_name
-    }
-  }
-`;
-const UPDATE_RECORD = gql`
-  mutation UpdateRecord($id: String!, $input: UpdateRecordInput!) {
-    updateRecord(id: $id, updateRecordInput: $input) {
-      id
-      service_type
-      description
-      cost
-      service_date
-      mechanic_name
-    }
-  }
-`;
-
-const DELETE_RECORD = gql`
-  mutation DeleteRecord($id: String!) {
-    removeRecord(id: $id) {
-      id
-    }
-  }
-`;
+import { ServiceRecordsService } from '../services/service-records.service';
 
 @Component({
   selector: 'app-service-records',
@@ -143,7 +59,7 @@ export class ServiceRecordsComponent implements OnInit {
 
   // Feature 2 - dropdown
   vehicles: any[] = [];
-  selectedVehicle: any = null;
+  selectedVehicle: string | null = null;
   selectedVehicleRecords: any[] = [];
   dropdownLoading = false;
   dropdownError: string | null = null;
@@ -156,7 +72,7 @@ export class ServiceRecordsComponent implements OnInit {
   saving = false;
 
   constructor(
-    private apollo: Apollo,
+    private serviceRecordsService: ServiceRecordsService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService
   ) {}
@@ -166,7 +82,7 @@ export class ServiceRecordsComponent implements OnInit {
     this.initForm();
   }
 
-  // Initilizing the form
+  // Initialize the form
   initForm(): void {
     this.recordForm = new FormGroup({
       service_type: new FormControl('', Validators.required),
@@ -177,7 +93,7 @@ export class ServiceRecordsComponent implements OnInit {
     });
   }
 
-  // Feature 1
+  // Feature 1: Search by VIN
   searchByVin(): void {
     const vin = this.vinSearchControl.value?.trim();
     if (!vin) {
@@ -189,105 +105,65 @@ export class ServiceRecordsComponent implements OnInit {
     this.searchError = null;
     this.searchedVehicle = null;
 
-    this.apollo
-      .query({
-        query: GET_VEHICLE_WITH_RECORDS,
-        variables: { vin },
-        fetchPolicy: 'network-only',
-      })
-      .subscribe({
-        next: (result: any) => {
-          this.searchedVehicle = result.data.getVehicle;
-          this.searchLoading = false;
-        },
-        error: (error) => {
-          this.searchError = 'Vehicle not found or error occured';
-          this.searchLoading = false;
-          console.error(error);
-        },
-      });
+    this.serviceRecordsService.getVehicleWithRecords(vin).subscribe({
+      next: (vehicle) => {
+        this.searchedVehicle = vehicle;
+        this.searchLoading = false;
+      },
+      error: (error) => {
+        this.searchError = 'Vehicle not found or error occurred';
+        this.searchLoading = false;
+        console.error(error);
+      },
+    });
   }
 
-  // Feature 2
-  // Load all vehicles for the dropdown
+  // Feature 2: Load all vehicles for dropdown
   loadAllVehicles(): void {
-    this.apollo
-      .query({
-        query: GET_ALL_VEHICLES,
-        variables: {
-          page: 1,
-          limit: 1000,
-        },
-      })
-      .subscribe({
-        next: (result: any) => {
-          console.log('Vehicle loaded:', result);
-          this.vehicles = result.data.getAllVehicles.data.map((v: any) => ({
-            label: `${v.first_name} ${v.last_name} - ${v.car_make} ${v.car_model} ${v.vin}`,
-            value: v.vin,
-            data: v,
-          }));
-        },
-        error: (error) => {
-          console.error('Error loading vehicles:', error);
-        },
-      });
+    this.serviceRecordsService.getAllVehicles().subscribe({
+      next: (vehicles) => {
+        this.vehicles = vehicles;
+      },
+      error: (error) => {
+        console.error('Error loading vehicles:', error);
+      },
+    });
   }
 
-  // Feature 2
-  // Handle the vehicle selection
+  // Feature 2: Handle vehicle selection
   onVehicleSelect(event: any): void {
-    console.log('=== onVehicleSelect called ===');
-    console.log('Event:', event);
-    console.log('Event.value:', event.value);
-
     const vin = event.value;
-    console.log('Selected VIN:', vin);
+    
     if (!vin) {
       this.selectedVehicle = null;
       this.selectedVehicleRecords = [];
-      console.log('No VIN, cleared selection');
       return;
     }
 
     this.selectedVehicle = vin;
-    console.log('Set selectedVehicle to:', this.selectedVehicle);
     this.loadRecordsByVin(vin);
   }
 
-  // Load recods by vin
+  // Load records by VIN
   loadRecordsByVin(vin: string): void {
     this.dropdownLoading = true;
     this.dropdownError = null;
 
-    this.apollo
-      .query({
-        query: GET_RECORDS_BY_VIN,
-        variables: { vin },
-        fetchPolicy: 'network-only',
-      })
-      .subscribe({
-        next: (result: any) => {
-          console.log('Records result:', result);
-          this.selectedVehicleRecords = result.data.serviceRecordsByVin;
-          this.dropdownLoading = false;
-        },
-        error: (error) => {
-          console.error('Full error', error);
-          this.dropdownError = 'Error loading service records';
-          this.dropdownLoading = false;
-        },
-      });
+    this.serviceRecordsService.getRecordsByVin(vin).subscribe({
+      next: (records) => {
+        this.selectedVehicleRecords = records;
+        this.dropdownLoading = false;
+      },
+      error: (error) => {
+        this.dropdownError = 'Error loading service records';
+        this.dropdownLoading = false;
+        console.error(error);
+      },
+    });
   }
 
-  // open dialog for new record creating
+  // Open dialog for creating new record
   openCreateDialog(): void {
-    console.log('=== openCreateDialog called ===');
-    console.log(
-      'Opening create dialog, selected vehicle:',
-      this.selectedVehicle
-    );
-
     if (!this.selectedVehicle) {
       this.messageService.add({
         severity: 'warn',
@@ -303,11 +179,9 @@ export class ServiceRecordsComponent implements OnInit {
       service_date: new Date(),
     });
     this.displayDialog = true;
-
-    console.log('Dialog opened, selectedVehicle is:', this.selectedVehicle);
   }
 
-  // Open dialog for editing an existing record
+  // Open dialog for editing existing record
   openEditDialog(record: any): void {
     this.isEditMode = true;
     this.selectedRecord = record;
@@ -321,13 +195,9 @@ export class ServiceRecordsComponent implements OnInit {
     this.displayDialog = true;
   }
 
-  // save the record - create & update
+  // Save record (create or update)
   saveRecord(): void {
     if (this.recordForm.invalid) {
-      console.log('=== saveRecord called ===');
-      console.log('selectedVehicle:', this.selectedVehicle);
-      console.log('Form value:', this.recordForm.value);
-
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -346,10 +216,7 @@ export class ServiceRecordsComponent implements OnInit {
     }
 
     this.saving = true;
-
     const formValue = this.recordForm.value;
-
-    console.log('Form value:', formValue);
 
     const input = {
       vin: this.selectedVehicle,
@@ -360,109 +227,88 @@ export class ServiceRecordsComponent implements OnInit {
       mechanic_name: formValue.mechanic_name,
     };
 
-    console.log('Create input:', input);
-
     if (this.isEditMode) {
-      // update the exsisting record
+      // Update existing record
       const updateInput = { ...input };
       delete (updateInput as any).vin;
 
-      console.log('Update input:', updateInput, 'ID:', this.selectedRecord.id);
-
-      this.apollo
-        .mutate({
-          mutation: UPDATE_RECORD,
-          variables: {
-            id: this.selectedRecord.id,
-            input: updateInput,
-          },
-        })
-        .subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Service record updtaed successfully',
-            });
-            this.displayDialog = false;
-            this.loadRecordsByVin(this.selectedVehicle);
-            this.saving = false;
-          },
-          error: (error) => {
-            console.error('Error updating record:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to update service record',
-            });
-            this.saving = false;
-          },
-        });
+      this.serviceRecordsService.updateRecord(this.selectedRecord.id, updateInput).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Service record updated successfully',
+          });
+          this.displayDialog = false;
+          this.loadRecordsByVin(this.selectedVehicle!);
+          this.saving = false;
+        },
+        error: (error) => {
+          console.error('Error updating record:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to update service record',
+          });
+          this.saving = false;
+        },
+      });
     } else {
-      // create a new reocrd
-      this.apollo
-        .mutate({
-          mutation: CREATE_RECORD,
-          variables: { input },
-        })
-        .subscribe({
-          next: (result) => {
-            console.log('Create result:', result);
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Service record created successfully',
-            });
-            this.displayDialog = false;
-            this.loadRecordsByVin(this.selectedVehicle);
-            this.saving = false;
-          },
-          error: (error) => {
-            console.error('Error creating record:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to create service record',
-            });
-            this.saving = false;
-          },
-        });
+      // Create new record
+      this.serviceRecordsService.createRecord(input).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Service record created successfully',
+          });
+          this.displayDialog = false;
+          this.loadRecordsByVin(this.selectedVehicle!);
+          this.saving = false;
+        },
+        error: (error) => {
+          console.error('Error creating record:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to create service record',
+          });
+          this.saving = false;
+        },
+      });
     }
   }
-  // delete record with confimation
+
+  // Delete record with confirmation
   deleteRecord(record: any): void {
     this.confirmationService.confirm({
       message: `Are you sure you want to delete this ${record.service_type} record?`,
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.apollo
-          .mutate({
-            mutation: DELETE_RECORD,
-            variables: { id: record.id },
-          })
-          .subscribe({
-            next: () => {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Service record deleted successfully',
-              });
-              this.loadRecordsByVin(this.selectedVehicle);
-            },
-            error: (error) => {
-              console.error('Error deleting record:', error);
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to delete service record',
-              });
-            },
-          });
+        this.serviceRecordsService.deleteRecord(record.id).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Service record deleted successfully',
+            });
+            this.loadRecordsByVin(this.selectedVehicle!);
+          },
+          error: (error) => {
+            console.error('Error deleting record:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to delete service record',
+            });
+          },
+        });
       },
     });
   }
 
+  // Helper methods
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString();
   }
