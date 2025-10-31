@@ -98,7 +98,7 @@ export class VehiclesComponent implements OnInit {
 
   submitValue(): void {
     if (this.inputValue <= 0) {
-      alert('Pleaseenter a valid age filter');
+      alert('Please enter a valid age filter');
       return;
     }
 
