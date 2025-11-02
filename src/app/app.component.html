@@ -1,23 +1,33 @@
 <app-notification></app-notification>
-<div class="app-container">
-  <nav class="tab-navigation">
-    <a
-      routerLink="/"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="tab-button"
-    >
-      Vehicle Management
-    </a>
-    <a
-      routerLink="/service-records"
-      routerLinkActive="active"
-      class="tab-button"
-    >
-      Service Records Management
-    </a>
-  </nav>
-  <div class="content-area">
+
+<div class="layout">
+  <header class="app-header">
+    <div class="logo-section">
+      <span class="logo-text">Vehicle Management System</span>
+    </div>
+
+    <nav class="nav-menu">
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-item"
+      >
+        <i class="pi pi-car"></i>
+        <span>Vehicles</span>
+      </a>
+      <a
+        routerLink="/service-records"
+        routerLinkActive="active"
+        class="nav-item"
+      >
+        <i class="pi pi-wrench"></i>
+        <span>Service Records</span>
+      </a>
+    </nav>
+  </header>
+
+  <main class="content">
     <router-outlet></router-outlet>
-  </div>
+  </main>
 </div>

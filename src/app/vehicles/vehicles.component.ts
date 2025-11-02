@@ -14,6 +14,8 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-vehicles',
@@ -31,7 +33,9 @@ import { CardModule } from 'primeng/card';
     TooltipModule,
     ProgressSpinnerModule,
     CardModule,
+    ToastModule, // Keep this
   ],
+  providers: [MessageService], // Add MessageService here for standalone component
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.scss'],
 })
@@ -49,7 +53,8 @@ export class VehiclesComponent implements OnInit {
   constructor(
     private vehiclesService: VehiclesService,
     private http: HttpClient,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private messageService: MessageService // Inject MessageService
   ) {}
 
   ngOnInit(): void {
@@ -57,14 +62,23 @@ export class VehiclesComponent implements OnInit {
   }
 
   loadVehicles(): void {
+    this.loading = true;
     this.vehiclesService.getAllVehicles(this.currentPage, 100).subscribe({
       next: (response) => {
         this.vehicles = response.data;
         this.totalRecords = response.total;
+        this.loading = false;
         console.log('Vehicles loaded:', this.vehicles);
       },
       error: (error) => {
+        this.loading = false;
         console.error('Error loading vehicles:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load vehicles',
+          life: 3000
+        });
       },
     });
   }
@@ -78,53 +92,123 @@ export class VehiclesComponent implements OnInit {
   onSearch(): void {
     if (this.searchText && this.searchText.trim()) {
       const searchPattern = this.searchText + '*';
+      this.loading = true;
       this.vehiclesService
         .searchVehicles(searchPattern, this.currentPage, 100)
         .subscribe({
           next: (response) => {
             this.vehicles = response.data;
             this.totalRecords = response.total;
+            this.loading = false;
             console.log('Search results:', this.vehicles);
+            
+            if (response.data.length === 0) {
+              this.messageService.add({
+                severity: 'info',
+                summary: 'No Results',
+                detail: 'No vehicles found matching your search',
+                life: 3000
+              });
+            }
           },
           error: (error) => {
+            this.loading = false;
             console.error('Error searching vehicles:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Search Failed',
+              detail: 'Error searching vehicles',
+              life: 3000
+            });
           },
         });
     } else {
-      // If search is empty, reload all vehicles.
       this.loadVehicles();
     }
   }
 
   submitValue(): void {
-    if (this.inputValue <= 0) {
-      alert('Please enter a valid age filter');
+    // Validate input
+    if (this.inputValue < 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Invalid Input',
+        detail: 'Age cannot be negative',
+        life: 3000
+      });
       return;
     }
 
-    // Fetch thre preview data
+    if (this.inputValue === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Invalid Input',
+        detail: 'Please enter a valid age filter',
+        life: 3000
+      });
+      return;
+    }
+
+    // Fetch the preview data
     this.vehiclesService.searchByAge(this.inputValue).subscribe({
       next: (vehicles) => {
         this.filteredVehiclesPreview = vehicles;
-        if (vehicles.lenght === 0) {
-          alert('No vehicles found matching this age filter');
+        
+        // Check if any records found (FIXED TYPO)
+        if (vehicles.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'No Records Found',
+            detail: `No vehicles found with age ≥ ${this.inputValue} years. Please try a different value.`,
+            life: 5000
+          });
+        } else {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Preview Ready',
+            detail: `Found ${vehicles.length} vehicle(s) matching your criteria`,
+            life: 3000
+          });
         }
       },
       error: (error) => {
         console.error('Error fetching preview:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to fetch preview data',
+          life: 3000
+        });
       },
     });
   }
 
   confirmExport(): void {
+    if (this.filteredVehiclesPreview.length === 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Export Failed',
+        detail: 'No records to export',
+        life: 3000
+      });
+      return;
+    }
+
     const { sessionHash, userId } = this.notificationService.getSessionInfo();
     console.log('Exporting with:', {
       minAge: this.inputValue,
       sessionHash,
       userId,
     });
+    
     if (!sessionHash || !userId) {
       console.error('Missing sessionHash or userId');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Export Failed',
+        detail: 'Session information is missing',
+        life: 3000
+      });
       return;
     }
 
@@ -137,10 +221,16 @@ export class VehiclesComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('Export job queued:', response);
-          this.cancelPreview(); // after the export close the priview
+          this.cancelPreview();
         },
         error: (error) => {
           console.error('Error exporting:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Export Failed',
+            detail: 'Failed to export vehicles',
+            life: 3000
+          });
         },
       });
   }
@@ -174,10 +264,22 @@ export class VehiclesComponent implements OnInit {
     this.http.post('http://localhost:3003/vehicle/import', formData).subscribe({
       next: (response) => {
         console.log('Upload successful:', response);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Upload Successful',
+          detail: `${file.name} uploaded successfully`,
+          life: 3000
+        });
         setTimeout(() => this.loadVehicles(), 2000);
       },
       error: (error) => {
         console.error('Error uploading:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Upload Failed',
+          detail: 'Failed to upload file',
+          life: 3000
+        });
       },
     });
   }
@@ -193,6 +295,7 @@ export class VehiclesComponent implements OnInit {
   saveVehicle(): void {
     if (!this.selectedVehicle) return;
 
+    this.saving = true;
     this.vehiclesService
       .updateVehicle(this.selectedVehicle.vin, {
         first_name: this.selectedVehicle.first_name,
@@ -204,11 +307,25 @@ export class VehiclesComponent implements OnInit {
       .subscribe({
         next: () => {
           console.log('Vehicle updated successfully');
+          this.saving = false;
           this.displayEditDialog = false;
-          this.loadVehicles(); // Refresh table
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Update Successful',
+            detail: 'Vehicle updated successfully',
+            life: 3000
+          });
+          this.loadVehicles();
         },
         error: (error) => {
           console.error('Error updating vehicle:', error);
+          this.saving = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Update Failed',
+            detail: 'Failed to update vehicle',
+            life: 3000
+          });
         },
       });
   }
@@ -218,10 +335,22 @@ export class VehiclesComponent implements OnInit {
       this.vehiclesService.deleteVehicle(vehicle.vin).subscribe({
         next: () => {
           console.log('Vehicle deleted successfully');
-          this.loadVehicles(); // Refresh table
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Delete Successful',
+            detail: 'Vehicle deleted successfully',
+            life: 3000
+          });
+          this.loadVehicles();
         },
         error: (error) => {
           console.error('Error deleting vehicle:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Delete Failed',
+            detail: 'Failed to delete vehicle',
+            life: 3000
+          });
         },
       });
     }

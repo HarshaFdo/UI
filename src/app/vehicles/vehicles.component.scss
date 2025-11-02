@@ -190,3 +190,39 @@
     align-items: flex-start;
   }
 }
+
+// Add to vehicles.component.scss
+::ng-deep {
+  .p-toast {
+    z-index: 99999 !important;
+    
+    .p-toast-message {
+      margin: 0 0 1rem 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      
+      &.p-toast-message-success {
+        background: #1ea97c;
+        border: solid #1ea97c;
+        color: #ffffff;
+      }
+      
+      &.p-toast-message-warn {
+        background: #f59e0b;
+        border: solid #f59e0b;
+        color: #ffffff;
+      }
+      
+      &.p-toast-message-error {
+        background: #e24c4c;
+        border: solid #e24c4c;
+        color: #ffffff;
+      }
+      
+      &.p-toast-message-info {
+        background: #3b82f6;
+        border: solid #3b82f6;
+        color: #ffffff;
+      }
+    }
+  }
+}

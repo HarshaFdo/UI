@@ -8,6 +8,8 @@ import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { GraphQLModule } from './grapgh.module';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { ButtonModule } from 'primeng/button';
+import { ToolbarModule } from 'primeng/toolbar';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,6 +17,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideAnimations(),
-    importProvidersFrom(GraphQLModule),
+    importProvidersFrom(GraphQLModule, ToolbarModule, ButtonModule),
   ],
 };
