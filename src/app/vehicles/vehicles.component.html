@@ -1,4 +1,4 @@
-<p-toast position="top-right"></p-toast>
+<p-toast></p-toast>
 <div class="vehicles-container">
 
   <p-card styleClass="mb-4">
@@ -10,6 +10,7 @@
           icon="pi pi-upload"
           (onClick)="openFileUploader()"
           styleClass="p-button-primary"
+          [style]="{'border-radius': '10px'}"
         ></p-button>
       </div>
 
@@ -28,6 +29,7 @@
             icon="pi pi-eye"
             (onClick)="submitValue()"
             severity="success"
+            [style]="{'border-radius': '10px'}"
           ></p-button>
         </div>
       </div>

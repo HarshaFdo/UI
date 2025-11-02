@@ -118,3 +118,12 @@ h4 {
   font-weight: 600;
   color: #495057;
 }
+
+:host ::ng-deep {
+  .p-confirm-dialog {
+    .p-confirm-dialog-accept {
+      background-color: #e24c4c !important;
+      border-color: #e24c4c !important;
+    }
+  }
+}

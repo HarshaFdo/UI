@@ -308,7 +308,6 @@ export class ServiceRecordsComponent implements OnInit {
     });
   }
 
-  // Helper methods
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString();
   }

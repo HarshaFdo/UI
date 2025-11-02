@@ -33,9 +33,9 @@ import { MessageService } from 'primeng/api';
     TooltipModule,
     ProgressSpinnerModule,
     CardModule,
-    ToastModule, // Keep this
+    ToastModule, 
   ],
-  providers: [MessageService], // Add MessageService here for standalone component
+  providers: [MessageService], 
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.scss'],
 })
@@ -154,7 +154,6 @@ export class VehiclesComponent implements OnInit {
       next: (vehicles) => {
         this.filteredVehiclesPreview = vehicles;
         
-        // Check if any records found (FIXED TYPO)
         if (vehicles.length === 0) {
           this.messageService.add({
             severity: 'warn',

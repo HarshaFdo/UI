@@ -15,6 +15,14 @@
   }
 }
 
+:host ::ng-deep {
+  .rounded-button {
+    .p-button {
+      border-radius: 10px !important;
+    }
+  }
+}
+
 .actions-row {
   display: flex;
   gap: 2rem;
@@ -30,6 +38,7 @@
 
   &.flex-grow {
     flex: 1;
+    max-width: 400px;
   }
 }
 
@@ -43,7 +52,12 @@
 .flex-group {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
+  align-items: stretch;
+  height: 40px;
+}
+
+.p-button {
+  height: 40px;
 }
 
 .age-input {
@@ -191,38 +205,30 @@
   }
 }
 
-// Add to vehicles.component.scss
-::ng-deep {
-  .p-toast {
-    z-index: 99999 !important;
-    
-    .p-toast-message {
-      margin: 0 0 1rem 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      
-      &.p-toast-message-success {
-        background: #1ea97c;
-        border: solid #1ea97c;
-        color: #ffffff;
+:host ::ng-deep {
+  .age-input {
+    .p-inputnumber {
+      height: 38px;
+
+      .p-inputtext {
+        height: 38px !important;
+        padding: 0.5rem 0.75rem;
       }
-      
-      &.p-toast-message-warn {
-        background: #f59e0b;
-        border: solid #f59e0b;
-        color: #ffffff;
-      }
-      
-      &.p-toast-message-error {
-        background: #e24c4c;
-        border: solid #e24c4c;
-        color: #ffffff;
-      }
-      
-      &.p-toast-message-info {
-        background: #3b82f6;
-        border: solid #3b82f6;
-        color: #ffffff;
+
+      .p-inputnumber-button-group {
+        height: 38px;
+
+        .p-button {
+          height: 20px !important;
+          width: 2rem;
+          padding: 0;
+
+          .p-button-icon {
+            font-size: 0.75rem;
+          }
+        }
       }
     }
   }
 }
+
