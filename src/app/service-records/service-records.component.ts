@@ -23,6 +23,8 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ServiceRecordsService } from '../services/service-records.service';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-service-records',
@@ -45,24 +47,26 @@ import { ServiceRecordsService } from '../services/service-records.service';
     CalendarModule,
     ConfirmDialogModule,
     ToastModule,
+    AutoCompleteModule,
+    TooltipModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './service-records.component.html',
   styleUrl: './service-records.component.scss',
 })
 export class ServiceRecordsComponent implements OnInit {
-  // Feature 1 - search by vin
-  vinSearchControl = new FormControl('');
-  searchedVehicle: any = null;
-  searchLoading = false;
-  searchError: string | null = null;
+  // AutoComplete
+  selectedVehicle: any = null;
+  filteredVehicles: any[] = [];
+  allVehicles: any[] = [];
 
-  // Feature 2 - dropdown
-  vehicles: any[] = [];
-  selectedVehicle: string | null = null;
-  selectedVehicleRecords: any[] = [];
-  dropdownLoading = false;
-  dropdownError: string | null = null;
+  // Vehicle data
+  selectedVehicleData: any = null;
+  vehicleRecords: any[] = [];
+
+  // Loading states
+  recordsLoading = false;
+  searchError: string | null = null;
 
   // for crud
   displayDialog = false;
@@ -93,78 +97,89 @@ export class ServiceRecordsComponent implements OnInit {
     });
   }
 
-  // Feature 1: Search by VIN
-  searchByVin(): void {
-    const vin = this.vinSearchControl.value?.trim();
-    if (!vin) {
-      this.searchError = 'Please enter a valid VIN';
-      return;
-    }
-
-    this.searchLoading = true;
-    this.searchError = null;
-    this.searchedVehicle = null;
-
-    this.serviceRecordsService.getVehicleWithRecords(vin).subscribe({
-      next: (vehicle) => {
-        this.searchedVehicle = vehicle;
-        this.searchLoading = false;
-      },
-      error: (error) => {
-        this.searchError = 'Vehicle not found or error occurred';
-        this.searchLoading = false;
-        console.error(error);
-      },
-    });
-  }
-
-  // Feature 2: Load all vehicles for dropdown
+  // Load all vehicles for autocomplete
   loadAllVehicles(): void {
     this.serviceRecordsService.getAllVehicles().subscribe({
       next: (vehicles) => {
-        this.vehicles = vehicles;
+        this.allVehicles = vehicles;
       },
       error: (error) => {
         console.error('Error loading vehicles:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load vehicles',
+        });
       },
     });
   }
 
-  // Feature 2: Handle vehicle selection
+  // Filter vehicles for autocomplete
+  searchVehicles(event: any): void {
+    const query = event.query.toLowerCase();
+    this.filteredVehicles = this.allVehicles.filter((vehicle) =>
+      vehicle.value.toLowerCase().includes(query)
+    );
+  }
+
+  // Handle vehicle selection from autocomplete
   onVehicleSelect(event: any): void {
-    const vin = event.value;
-    
-    if (!vin) {
-      this.selectedVehicle = null;
-      this.selectedVehicleRecords = [];
+    const selectedVin =
+      event.value?.value || event.value?.data?.vin || event.value;
+
+    if (!selectedVin) {
+      console.error('Unable to extract VIN from selection:', event.value);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Unable to extract VIN from selection',
+      });
       return;
     }
 
-    this.selectedVehicle = vin;
-    this.loadRecordsByVin(vin);
-  }
+    console.log('[ServiceRecordsComponent] Selected VIN:', selectedVin);
 
-  // Load records by VIN
-  loadRecordsByVin(vin: string): void {
-    this.dropdownLoading = true;
-    this.dropdownError = null;
+    this.searchError = null;
+    this.recordsLoading = true;
 
-    this.serviceRecordsService.getRecordsByVin(vin).subscribe({
-      next: (records) => {
-        this.selectedVehicleRecords = records;
-        this.dropdownLoading = false;
+    // Get vehicle details with service records
+    this.serviceRecordsService.getVehicleWithRecords(selectedVin).subscribe({
+      next: (vehicle) => {
+        this.selectedVehicleData = vehicle;
+        this.vehicleRecords = vehicle.serviceRecords || [];
+        this.recordsLoading = false;
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Vehicle loaded successfully',
+        });
       },
       error: (error) => {
-        this.dropdownError = 'Error loading service records';
-        this.dropdownLoading = false;
+        this.searchError = 'Failed to load vehicle details';
+        this.recordsLoading = false;
         console.error(error);
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load vehicle details',
+        });
       },
     });
+  }
+
+  // Handle clear
+  onClear(): void {
+    this.selectedVehicle = null;
+    this.selectedVehicleData = null;
+    this.vehicleRecords = [];
+    this.searchError = null;
   }
 
   // Open dialog for creating new record
   openCreateDialog(): void {
-    if (!this.selectedVehicle) {
+    if (!this.selectedVehicleData) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Warning',
@@ -203,10 +218,13 @@ export class ServiceRecordsComponent implements OnInit {
         summary: 'Error',
         detail: 'Please fill all required fields',
       });
+      Object.keys(this.recordForm.controls).forEach((key) => {
+        this.recordForm.get(key)?.markAsTouched();
+      });
       return;
     }
 
-    if (!this.selectedVehicle) {
+    if (!this.selectedVehicleData) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -219,7 +237,7 @@ export class ServiceRecordsComponent implements OnInit {
     const formValue = this.recordForm.value;
 
     const input = {
-      vin: this.selectedVehicle,
+      vin: this.selectedVehicleData.vin,
       service_type: formValue.service_type,
       description: formValue.description,
       cost: Number(formValue.cost),
@@ -232,27 +250,29 @@ export class ServiceRecordsComponent implements OnInit {
       const updateInput = { ...input };
       delete (updateInput as any).vin;
 
-      this.serviceRecordsService.updateRecord(this.selectedRecord.id, updateInput).subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Service record updated successfully',
-          });
-          this.displayDialog = false;
-          this.loadRecordsByVin(this.selectedVehicle!);
-          this.saving = false;
-        },
-        error: (error) => {
-          console.error('Error updating record:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to update service record',
-          });
-          this.saving = false;
-        },
-      });
+      this.serviceRecordsService
+        .updateRecord(this.selectedRecord.id, updateInput)
+        .subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Service record updated successfully',
+            });
+            this.displayDialog = false;
+            this.reloadCurrentVehicle();
+            this.saving = false;
+          },
+          error: (error) => {
+            console.error('Error updating record:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to update service record',
+            });
+            this.saving = false;
+          },
+        });
     } else {
       // Create new record
       this.serviceRecordsService.createRecord(input).subscribe({
@@ -263,7 +283,7 @@ export class ServiceRecordsComponent implements OnInit {
             detail: 'Service record created successfully',
           });
           this.displayDialog = false;
-          this.loadRecordsByVin(this.selectedVehicle!);
+          this.reloadCurrentVehicle();
           this.saving = false;
         },
         error: (error) => {
@@ -293,7 +313,7 @@ export class ServiceRecordsComponent implements OnInit {
               summary: 'Success',
               detail: 'Service record deleted successfully',
             });
-            this.loadRecordsByVin(this.selectedVehicle!);
+            this.reloadCurrentVehicle();
           },
           error: (error) => {
             console.error('Error deleting record:', error);
@@ -306,6 +326,26 @@ export class ServiceRecordsComponent implements OnInit {
         });
       },
     });
+  }
+
+  // Reload current vehicle data
+  reloadCurrentVehicle(): void {
+    if (this.selectedVehicleData) {
+      this.recordsLoading = true;
+      this.serviceRecordsService
+        .getVehicleWithRecords(this.selectedVehicleData.vin)
+        .subscribe({
+          next: (vehicle) => {
+            this.selectedVehicleData = vehicle;
+            this.vehicleRecords = vehicle.serviceRecords || [];
+            this.recordsLoading = false;
+          },
+          error: (error) => {
+            console.error('Error reloading vehicle:', error);
+            this.recordsLoading = false;
+          },
+        });
+    }
   }
 
   formatDate(date: string): string {

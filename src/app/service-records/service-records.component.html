@@ -2,26 +2,24 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="service-records-container">
-  <!-- Feature 1: Search by VIN -->
-  <p-card header="Search by VIN" styleClass="mb-4">
+  <!-- Combined Feature: AutoComplete Search -->
+  <p-card header="Search Vehicle by VIN" styleClass="mb-4">
     <div class="search-box">
       <span class="p-input flex-1">
-        <input
-          pInputText
-          type="text"
-          [formControl]="vinSearchControl"
-          placeholder="Enter VIN (e.g., Z9R77V461L1830K)"
-          (keyup.enter)="searchByVin()"
-          class="w-full"
-        />
+        <p-autoComplete
+          [(ngModel)]="selectedVehicle"
+          [suggestions]="filteredVehicles"
+          (completeMethod)="searchVehicles($event)"
+          (onSelect)="onVehicleSelect($event)"
+          (onClear)="onClear()"
+          field="label"
+          [dropdown]="true"
+          placeholder="Type VIN or vehicle details..."
+          [showClear]="true"
+          styleClass="w-full"
+        >
+        </p-autoComplete>
       </span>
-      <p-button
-        label="Search"
-        (onClick)="searchByVin()"
-        [loading]="searchLoading"
-        styleClass="ml-2"
-        [style]="{'border-radius': '10px'}"
-      ></p-button>
     </div>
 
     <p-message
@@ -31,170 +29,93 @@
       styleClass="mt-3"
     ></p-message>
 
-    <div *ngIf="searchedVehicle" class="mt-4">
+    <!-- Vehicle Information Card -->
+    <div *ngIf="selectedVehicleData" class="mt-4">
       <p-card header="Vehicle Information" styleClass="mb-3">
         <div class="grid">
           <div class="col-12 md:col-6">
-            <p><strong>VIN:</strong> {{ searchedVehicle.vin }}</p>
+            <p><strong>VIN:</strong> {{ selectedVehicleData.vin }}</p>
             <p>
-              <strong>Owner:</strong> {{ searchedVehicle.first_name }}
-              {{ searchedVehicle.last_name }}
+              <strong>Owner:</strong> {{ selectedVehicleData.first_name }}
+              {{ selectedVehicleData.last_name }}
             </p>
           </div>
           <div class="col-12 md:col-6">
             <p>
-              <strong>Vehicle:</strong> {{ searchedVehicle.car_make }}
-              {{ searchedVehicle.car_model }}
+              <strong>Vehicle:</strong> {{ selectedVehicleData.car_make }}
+              {{ selectedVehicleData.car_model }}
             </p>
             <p>
-              <strong>Age:</strong> {{ searchedVehicle.age_of_vehicle }} years
+              <strong>Age:</strong>
+              {{ selectedVehicleData.age_of_vehicle }} years
             </p>
           </div>
         </div>
       </p-card>
 
+      <!-- Service Records Section -->
       <p-card header="Service Records">
+        <div class="flex justify-content-between align-items-center mb-3">
+          <h4>Service History</h4>
+          <p-button
+            label="Add Service Record"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+            styleClass="p-button-success"
+            [style]="{ 'border-radius': '10px' }"
+          ></p-button>
+        </div>
+
+        <div *ngIf="recordsLoading" class="text-center mt-4">
+          <p-progressSpinner styleClass="w-4rem h-4rem"></p-progressSpinner>
+          <p>Loading service records...</p>
+        </div>
+
         <p-message
-          *ngIf="searchedVehicle.serviceRecords?.length === 0"
+          *ngIf="vehicleRecords.length === 0 && !recordsLoading"
           severity="info"
           text="No service records found for this vehicle."
+          styleClass="mb-3"
         ></p-message>
 
-        <div *ngIf="searchedVehicle.serviceRecords?.length > 0">
-          <p-table
-            [value]="searchedVehicle.serviceRecords"
-            styleClass="p-datatable-sm"
-          >
+        <div *ngIf="vehicleRecords.length > 0 && !recordsLoading">
+          <p-table [value]="vehicleRecords" styleClass="p-datatable-striped">
             <ng-template pTemplate="header">
               <tr>
+                <th>Date</th>
                 <th>Service Type</th>
                 <th>Description</th>
                 <th>Cost</th>
-                <th>Date</th>
                 <th>Mechanic</th>
+                <th>Actions</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-record>
               <tr>
+                <td>{{ formatDate(record.service_date) }}</td>
                 <td>{{ record.service_type }}</td>
                 <td>{{ record.description }}</td>
                 <td>{{ formatCurrency(record.cost) }}</td>
-                <td>{{ formatDate(record.service_date) }}</td>
                 <td>{{ record.mechanic_name }}</td>
+                <td>
+                  <p-button
+                    icon="pi pi-pencil"
+                    styleClass="p-button-rounded p-button-text p-button-warning mr-2"
+                    (onClick)="openEditDialog(record)"
+                    pTooltip="Edit"
+                  ></p-button>
+                  <p-button
+                    icon="pi pi-trash"
+                    styleClass="p-button-rounded p-button-text p-button-danger"
+                    (onClick)="deleteRecord(record)"
+                    pTooltip="Delete"
+                  ></p-button>
+                </td>
               </tr>
             </ng-template>
           </p-table>
         </div>
       </p-card>
-    </div>
-  </p-card>
-
-  <p-divider></p-divider>
-
-  <!-- Feature 2: Dropdown Selection -->
-  <p-card header="View All Records by Vehicle" styleClass="mt-4">
-    <div class="dropdown-container">
-      <p-dropdown
-        [options]="vehicles"
-        [(ngModel)]="selectedVehicle"
-        (onChange)="onVehicleSelect($event)"
-        placeholder="-- Select a Vehicle --"
-        [filter]="true"
-        filterBy="label"
-        styleClass="w-full"
-        [showClear]="true"
-      ></p-dropdown>
-    </div>
-
-    <div *ngIf="dropdownLoading" class="text-center mt-4">
-      <p-progressSpinner styleClass="w-4rem h-4rem"></p-progressSpinner>
-      <p>Loading service records...</p>
-    </div>
-
-    <p-message
-      *ngIf="dropdownError"
-      severity="error"
-      [text]="dropdownError"
-      styleClass="mt-3"
-    ></p-message>
-
-    <div
-      *ngIf="selectedVehicle && selectedVehicleRecords.length > 0"
-      class="mt-4"
-    >
-      <div class="flex justify-content-between align-items-center">
-        <h4>Service History</h4>
-        <p-button
-          label="Add Service Record"
-          icon="pi pi-plus"
-          (onClick)="openCreateDialog()"
-          styleClass="p-button-success"
-          [style]="{'border-radius': '10px'}"
-        ></p-button>
-      </div>
-
-      <p-card>
-        <p-table
-          [value]="selectedVehicleRecords"
-          styleClass="p-datatable-striped"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Date</th>
-              <th>Service Type</th>
-              <th>Description</th>
-              <th>Cost</th>
-              <th>Mechanic</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-record>
-            <tr>
-              <td>{{ formatDate(record.service_date) }}</td>
-              <td>{{ record.service_type }}</td>
-              <td>{{ record.description }}</td>
-              <td>{{ formatCurrency(record.cost) }}</td>
-              <td>{{ record.mechanic_name }}</td>
-              <td>
-                <p-button
-                  icon="pi pi-pencil"
-                  styleClass="p-button-rounded p-button-text p-button-warning mr-2"
-                  (onClick)="openEditDialog(record)"
-                  pTooltip="Edit"
-                ></p-button>
-                <p-button
-                  icon="pi pi-trash"
-                  styleClass="p-button-rounded p-button-text p-button-danger"
-                  (onClick)="deleteRecord(record)"
-                  pTooltip="Delete"
-                ></p-button>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-card>
-    </div>
-
-    <div
-      *ngIf="
-        selectedVehicle &&
-        selectedVehicleRecords.length === 0 &&
-        !dropdownLoading
-      "
-      class="mt-4"
-    >
-      <p-message
-        severity="info"
-        text="No service records found for this vehicle."
-      ></p-message>
-      <div class="text-center mt-3">
-        <p-button
-          label="Add First Service Record"
-          icon="pi pi-plus"
-          (onClick)="openCreateDialog()"
-          styleClass="p-button-success"
-          [style]="{'border-radius': '10px'}"
-        ></p-button>
-      </div>
     </div>
   </p-card>
 </div>
@@ -210,7 +131,6 @@
 >
   <form [formGroup]="recordForm">
     <div class="p-fluid">
-      <!-- Service Type -->
       <div class="field">
         <label for="service_type">Service Type *</label>
         <input
@@ -230,7 +150,6 @@
         </small>
       </div>
 
-      <!-- Description -->
       <div class="field">
         <label for="description">Description *</label>
         <textarea
@@ -251,7 +170,6 @@
         </small>
       </div>
 
-      <!-- Cost -->
       <div class="field">
         <label for="cost">Cost ($) *</label>
         <p-inputNumber
@@ -272,7 +190,6 @@
         </small>
       </div>
 
-      <!-- Service Date -->
       <div class="field">
         <label for="service_date">Service Date *</label>
         <p-calendar
@@ -293,7 +210,6 @@
         </small>
       </div>
 
-      <!-- Mechanic Name -->
       <div class="field">
         <label for="mechanic_name">Mechanic Name *</label>
         <input
