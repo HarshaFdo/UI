@@ -106,7 +106,7 @@ export class ServiceRecordsService {
   }
 
   // Get all vehicles for dropdown
-  getAllVehicles(page: number = 1, limit: number = 100000): Observable<any[]> {
+  getAllVehicles(page: number = 1, limit: number = 10000): Observable<any[]> {
     return this.apollo
       .query({
         query: GET_ALL_VEHICLES,
