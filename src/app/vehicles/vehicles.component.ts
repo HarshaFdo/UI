@@ -129,16 +129,6 @@ export class VehiclesComponent implements OnInit {
 
   submitValue(): void {
     // Validate input
-    if (this.inputValue < 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Invalid Input',
-        detail: 'Age cannot be negative',
-        life: 3000
-      });
-      return;
-    }
-
     if (this.inputValue === 0) {
       this.messageService.add({
         severity: 'warn',
