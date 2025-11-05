@@ -33,9 +33,9 @@ import { MessageService } from 'primeng/api';
     TooltipModule,
     ProgressSpinnerModule,
     CardModule,
-    ToastModule, 
+    ToastModule,
   ],
-  providers: [MessageService], 
+  providers: [MessageService],
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.scss'],
 })
@@ -77,7 +77,7 @@ export class VehiclesComponent implements OnInit {
           severity: 'error',
           summary: 'Error',
           detail: 'Failed to load vehicles',
-          life: 3000
+          life: 3000,
         });
       },
     });
@@ -101,13 +101,13 @@ export class VehiclesComponent implements OnInit {
             this.totalRecords = response.total;
             this.loading = false;
             console.log('Search results:', this.vehicles);
-            
+
             if (response.data.length === 0) {
               this.messageService.add({
                 severity: 'info',
                 summary: 'No Results',
                 detail: 'No vehicles found matching your search',
-                life: 3000
+                life: 3000,
               });
             }
           },
@@ -118,7 +118,7 @@ export class VehiclesComponent implements OnInit {
               severity: 'error',
               summary: 'Search Failed',
               detail: 'Error searching vehicles',
-              life: 3000
+              life: 3000,
             });
           },
         });
@@ -134,7 +134,7 @@ export class VehiclesComponent implements OnInit {
         severity: 'warn',
         summary: 'Invalid Input',
         detail: 'Please enter a valid age filter',
-        life: 3000
+        life: 3000,
       });
       return;
     }
@@ -143,20 +143,20 @@ export class VehiclesComponent implements OnInit {
     this.vehiclesService.searchByAge(this.inputValue).subscribe({
       next: (vehicles) => {
         this.filteredVehiclesPreview = vehicles;
-        
+
         if (vehicles.length === 0) {
           this.messageService.add({
             severity: 'warn',
             summary: 'No Records Found',
             detail: `No vehicles found with age ≥ ${this.inputValue} years. Please try a different value.`,
-            life: 5000
+            life: 5000,
           });
         } else {
           this.messageService.add({
             severity: 'success',
             summary: 'Preview Ready',
             detail: `Found ${vehicles.length} vehicle(s) matching your criteria`,
-            life: 3000
+            life: 3000,
           });
         }
       },
@@ -166,37 +166,27 @@ export class VehiclesComponent implements OnInit {
           severity: 'error',
           summary: 'Error',
           detail: 'Failed to fetch preview data',
-          life: 3000
+          life: 3000,
         });
       },
     });
   }
 
   confirmExport(): void {
-    if (this.filteredVehiclesPreview.length === 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Export Failed',
-        detail: 'No records to export',
-        life: 3000
-      });
-      return;
-    }
-
     const { sessionHash, userId } = this.notificationService.getSessionInfo();
     console.log('Exporting with:', {
       minAge: this.inputValue,
       sessionHash,
       userId,
     });
-    
+
     if (!sessionHash || !userId) {
       console.error('Missing sessionHash or userId');
       this.messageService.add({
         severity: 'error',
         summary: 'Export Failed',
         detail: 'Session information is missing',
-        life: 3000
+        life: 3000,
       });
       return;
     }
@@ -218,7 +208,7 @@ export class VehiclesComponent implements OnInit {
             severity: 'error',
             summary: 'Export Failed',
             detail: 'Failed to export vehicles',
-            life: 3000
+            life: 3000,
           });
         },
       });
@@ -257,7 +247,7 @@ export class VehiclesComponent implements OnInit {
           severity: 'success',
           summary: 'Upload Successful',
           detail: `${file.name} uploaded successfully`,
-          life: 3000
+          life: 3000,
         });
         setTimeout(() => this.loadVehicles(), 2000);
       },
@@ -267,7 +257,7 @@ export class VehiclesComponent implements OnInit {
           severity: 'error',
           summary: 'Upload Failed',
           detail: 'Failed to upload file',
-          life: 3000
+          life: 3000,
         });
       },
     });
@@ -302,7 +292,7 @@ export class VehiclesComponent implements OnInit {
             severity: 'success',
             summary: 'Update Successful',
             detail: 'Vehicle updated successfully',
-            life: 3000
+            life: 3000,
           });
           this.loadVehicles();
         },
@@ -313,7 +303,7 @@ export class VehiclesComponent implements OnInit {
             severity: 'error',
             summary: 'Update Failed',
             detail: 'Failed to update vehicle',
-            life: 3000
+            life: 3000,
           });
         },
       });
@@ -328,7 +318,7 @@ export class VehiclesComponent implements OnInit {
             severity: 'success',
             summary: 'Delete Successful',
             detail: 'Vehicle deleted successfully',
-            life: 3000
+            life: 3000,
           });
           this.loadVehicles();
         },
@@ -338,7 +328,7 @@ export class VehiclesComponent implements OnInit {
             severity: 'error',
             summary: 'Delete Failed',
             detail: 'Failed to delete vehicle',
-            life: 3000
+            life: 3000,
           });
         },
       });
