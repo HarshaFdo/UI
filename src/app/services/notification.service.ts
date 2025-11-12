@@ -15,14 +15,9 @@ export interface AppNotification {
 export class NotificationService {
   private socket: Socket;
   private notifications$ = new BehaviorSubject<AppNotification[]>([]);
-  private sessionHash: string;
   private userId: string;
 
   constructor() {
-    // Initialize sessionHash - shared across tabs and user specific
-    this.sessionHash = localStorage.getItem('sessionHash') || this.generateUUID();
-    localStorage.setItem('sessionHash', this.sessionHash);
-
     // Initialize userId - unique per tab
     this.userId = sessionStorage.getItem('userId') || this.generateUUID();
     sessionStorage.setItem('userId', this.userId);
@@ -37,11 +32,10 @@ export class NotificationService {
       console.log('Connected to notification server');
       // Register user
       this.socket.emit('register', {
-        sessionHash: this.sessionHash,
         userId: this.userId,
       });
       console.log(
-        `Registered with sessionHash: ${this.sessionHash}, userId: ${this.userId}`
+        `Registered with userId: ${this.userId}`
       );
     });
 
@@ -65,7 +59,6 @@ export class NotificationService {
     this.socket.on('reconnect', () => {
       console.log('Reconnected, re-registering');
       this.socket.emit('register', {
-        sessionHash: this.sessionHash,
         userId: this.userId,
       });
     });
@@ -80,7 +73,7 @@ export class NotificationService {
   }
 
   getSessionInfo() {
-    return { sessionHash: this.sessionHash, userId: this.userId };
+    return {userId: this.userId };
   }
   public removeNotification(notification: AppNotification) {
     const current = this.notifications$.value;

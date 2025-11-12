@@ -173,15 +173,14 @@ export class VehiclesComponent implements OnInit {
   }
 
   confirmExport(): void {
-    const { sessionHash, userId } = this.notificationService.getSessionInfo();
+    const { userId } = this.notificationService.getSessionInfo();
     console.log('Exporting with:', {
       minAge: this.inputValue,
-      sessionHash,
       userId,
     });
 
-    if (!sessionHash || !userId) {
-      console.error('Missing sessionHash or userId');
+    if (!userId) {
+      console.error('Missing userId');
       this.messageService.add({
         severity: 'error',
         summary: 'Export Failed',
@@ -194,7 +193,6 @@ export class VehiclesComponent implements OnInit {
     this.http
       .post('http://localhost:3003/vehicle/export', {
         minAge: this.inputValue,
-        sessionHash,
         userId: userId,
       })
       .subscribe({
