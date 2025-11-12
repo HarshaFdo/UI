@@ -29,7 +29,7 @@
       styleClass="mt-3"
     ></p-message>
 
-    <!-- Vehicle Information Card -->
+
     <div *ngIf="selectedVehicleData" class="mt-4">
       <p-card header="Vehicle Information" styleClass="mb-3">
         <div class="grid">
@@ -53,7 +53,6 @@
         </div>
       </p-card>
 
-      <!-- Service Records Section -->
       <p-card header="Service Records">
         <div class="flex justify-content-between align-items-center mb-3">
           <h4>Service History</h4>
@@ -120,7 +119,6 @@
   </p-card>
 </div>
 
-<!-- Create/Edit Dialog -->
 <p-dialog
   [(visible)]="displayDialog"
   [header]="isEditMode ? 'Edit Service Record' : 'Add Service Record'"
