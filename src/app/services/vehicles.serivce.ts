@@ -135,7 +135,7 @@ export class VehiclesService {
 
   deleteVehicle(vin: string): Observable<boolean> {
     return this.apollo
-      .mutate({
+      .mutate<{ deleteVehicle: boolean }>({
         mutation: DELETE_VEHICLE,
         variables: { vin },
       } as any)
