@@ -149,7 +149,7 @@ export class VehiclesComponent implements OnInit {
             severity: 'warn',
             summary: 'No Records Found',
             detail: `No vehicles found with age ≥ ${this.inputValue} years. Please try a different value.`,
-            life: 5000,
+            life: 3000,
           });
         } else {
           this.messageService.add({

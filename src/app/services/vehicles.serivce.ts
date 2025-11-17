@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { vehicle } from '../vehicles/Vehilces.model';
 
 const GET_ALL_VEHICLES = gql`
   query GetAllVehicles($page: Int!, $limit: Int!) {
@@ -113,9 +114,9 @@ export class VehiclesService {
       .valueChanges.pipe(map((result) => result.data.searchVehicles));
   }
 
-  searchByAge(minAge: number): Observable<any> {
+  searchByAge(minAge: number): Observable<vehicle[]> {
     return this.apollo
-      .watchQuery<any>({
+      .watchQuery<{ searchByAge: vehicle[] }>({
         query: SEARCH_BY_AGE,
         variables: { minAge },
         fetchPolicy: 'network-only',
@@ -132,7 +133,7 @@ export class VehiclesService {
       .pipe(map((result: any) => result.data?.updateVehicle));
   }
 
-  deleteVehicle(vin: string): Observable<any> {
+  deleteVehicle(vin: string): Observable<boolean> {
     return this.apollo
       .mutate({
         mutation: DELETE_VEHICLE,
